@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admit Card Generator</title>
+    <link rel="stylesheet" href="../css/form.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Admit Card Application Form</h1>
+
+        <form id="admitCardForm">
+            <!-- Full Name -->
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" name="fullName" required>
+
+            <!-- Student ID -->
+            <label for="studentId">Student ID</label>
+            <input type="text" id="studentId" name="studentId" required>
+
+            <!-- Batch -->
+            <label for="batch">Batch</label>
+            <input type="text" id="batch" name="batch" required>
+
+            <!-- Semester -->
+            <label for="semester">Current Semester</label>
+            <select id="semester" name="semester" required>
+                <option value="" disabled selected>Select Semester</option>
+                <option value="Semester 1">Semester 1</option>
+                <option value="Semester 2">Semester 2</option>
+                <option value="Semester 3">Semester 3</option>
+                <option value="Semester 4">Semester 4</option>
+                <!-- Add more semesters as needed -->
+            </select>
+
+            <!-- Auto-filled Course Name based on Semester -->
+            <label for="exam">Exam Name</label>
+            <input type="text" id="exam" name="exam" required>
+
+            <!-- Phone -->
+            <label for="phone">Phone</label>
+            <input type="text" id="phone" name="phone" required>
+
+            <!-- Email -->
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+
+            <!-- Upload Receipt Photo -->
+            <label for="paymentReciept">Upload Receipt Photo</label>
+            <input type="file" id="paymentReciept" name="paymentReciept" accept="image/*" required>
+
+            <!-- Submit Button -->
+            <button type="submit">Submit</button>
+        </form>
+
+        <div id="successMessage" style="display: none;">
+            <p>Your application has been submitted! Please wait for admin approval.</p>
+        </div>
+    </div>
+
+    <script>
+
+        document.getElementById("admitCardForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append("exam", document.getElementById("exam").value);
+            formData.append("paymentReciept", document.getElementById("paymentReciept").files[0]);
+
+            try {
+                const res = await fetch("https://project300-backend.onrender.com/api/admitcards", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        Authorization: "Bearer " + localStorage.getItem("token")
+                    }
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert("Admit card request submitted successfully!");
+                    console.log(data);
+                } else {
+                    alert(data.message || "Something went wrong");
+                }
+            } catch (err) {
+                console.error(err);
+                // alert("Error submitting form");
+            }
+        });
+
+
+    </script>
+</body>
+
+</html>

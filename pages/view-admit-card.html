@@ -1,0 +1,174 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Admit Card</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/form.css">
+    <style>
+        .admit-card-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin: 50px auto;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        .admit-card-container h2 {
+            color: #0D5EF3;
+            margin-bottom: 30px;
+        }
+
+        .admit-card-details p {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .admit-card-details span {
+            font-weight: bold;
+        }
+
+        .download-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px !important;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 14px !important;
+        }
+
+        .download-btn:hover {
+            background-color: #45a049;
+            color: black !important;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="admit-card-container">
+            <h2>Your Admit Card</h2>
+            <div id="admit-card-details" class="admit-card-details">
+                <!-- Admit card details will be loaded here -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Exam Name</th>
+                            <th>Actions</th>
+                            <td></td>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-requests-tbody">
+                        <!-- Requests will be populated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            async function loadMyAdmitCards() {
+                try {
+                    const res = await fetch("https://project300-backend.onrender.com/api/admitcards", {
+                        method: "GET",
+                        headers: {
+                            Authorization: "Bearer " + localStorage.getItem("token"),
+                        },
+                    });
+
+                    const data = await res.json();
+
+                    console.log(data);
+
+                    if (!res.ok) {
+                        alert(data.message || "Failed to fetch admit cards");
+                        return;
+                    }
+
+                    const tbody = document.getElementById("pending-requests-tbody");
+                    tbody.innerHTML = "";
+
+                    data.forEach((card) => {
+                        const tr = document.createElement("tr");
+
+                        tr.innerHTML = `
+    <td>${card.exam || "N/A"}</td>
+    <td>
+        ${card.status === 'pending' ? "Pending" : `<button class="download-btn" onclick="downloadAdmitCard('${card._id}')">Download</button>`}
+    </td>
+    `;
+
+                        tbody.appendChild(tr);
+                    });
+                } catch (err) {
+                    console.error("Error fetching admit cards:", err);
+                    alert("Error loading data");
+                }
+            }
+
+            window.downloadAdmitCard = async function (id) {
+                try {
+                    const res = await fetch(`https://project300-backend.onrender.com/api/admitcards/${id}/download`, {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/pdf',
+                            Authorization: "Bearer " + localStorage.getItem("token")
+                        }
+                    });
+
+                    if (!res.ok) {
+                        const data = await res.json();
+                        // alert(data.message || "Failed to download admit card");
+                        return;
+                    }
+
+                    // Get the PDF as a blob
+                    const blob = await res.blob();
+
+                    // Create a temporary link to trigger download
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+
+                    // Optionally set the filename
+                    a.download = "admit_card.pdf";
+
+                    document.body.appendChild(a);
+                    a.click();
+
+                    // Clean up
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+
+                } catch (err) {
+                    console.error("Error downloading admit card:", err);
+                    // alert("Error downloading admit card");
+                }
+            };
+
+
+            loadMyAdmitCards();
+        });
+
+
+
+
+    </script>
+
+
+</body>
+
+</html>
